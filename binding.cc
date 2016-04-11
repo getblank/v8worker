@@ -296,7 +296,6 @@ int worker_send(worker* w, const char* msg) {
 // Called from golang. Must route message to javascript lang.
 // It will call the $recv_sync_handler callback function and return its string value.
 const char* worker_send_sync(worker* w, const char* msg) {
-  std::string out;
   Locker locker(w->isolate);
   Isolate::Scope isolate_scope(w->isolate);
   HandleScope handle_scope(w->isolate);
@@ -306,8 +305,7 @@ const char* worker_send_sync(worker* w, const char* msg) {
 
   Local<Function> recv_sync_handler = Local<Function>::New(w->isolate, w->recv_sync_handler);
   if (recv_sync_handler.IsEmpty()) {
-    out.append("err: $recvSync not called");
-    return out.c_str();
+    return "err: $recvSync not called";
   }
 
   Local<Value> args[1];
@@ -316,11 +314,12 @@ const char* worker_send_sync(worker* w, const char* msg) {
 
   if (response_value->IsString()) {
     String::Utf8Value response(response_value->ToString());
+    std::string out;
     out.append(*response);
-  } else {
-    out.append("err: non-string return value");
+    return out.c_str();
   }
-  return out.c_str();
+
+  return "err: non-string return value";
 }
 
 void v8_init() {
