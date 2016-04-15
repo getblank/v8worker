@@ -1,4 +1,4 @@
-version?=4.9-lkgr
+version?=5.0-lkgr
 target?=native # available: x64.debug, ia32.debug, ia32.release, x64.release
 
 test: v8worker.test
