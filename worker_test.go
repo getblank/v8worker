@@ -1,6 +1,7 @@
 package v8worker
 
 import (
+	"fmt"
 	"runtime"
 	"strings"
 	"testing"
@@ -229,4 +230,39 @@ func TestLoadWithOptions(t *testing.T) {
 	if !strings.Contains(err.Error(), expected) {
 		t.Fatal("Bad stack trace", err.Error())
 	}
+}
+
+func TestGetHeapStatistics(t *testing.T) {
+	worker := New(func(msg string) {
+		println("recv cb", msg)
+	}, DiscardSendSync)
+	statistics := worker.GetHeapStatistics()
+	fmt.Println("Used 0: ", statistics.UsedHeapSize)
+	err := worker.Load("code1.js", `
+		(function () {
+			var a = 1;
+			var b = "1234567890";
+		})();
+	`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	statistics = worker.GetHeapStatistics()
+	fmt.Println("Used 1: ", statistics.UsedHeapSize)
+	err = worker.Load("code2.js", `
+		(function () {
+			var c = [];
+			for (var i = 0; i < 1000; i++) {
+				c.push(i);
+			}
+		})();
+	`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	statistics = worker.GetHeapStatistics()
+	fmt.Println("Used 2: ", statistics.UsedHeapSize)
+	worker.LowMemoryNotification()
+	statistics = worker.GetHeapStatistics()
+	fmt.Println("Used 3: ", statistics.UsedHeapSize)
 }

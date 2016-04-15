@@ -56,6 +56,18 @@ type ScriptOrigin struct {
 	IsOpaque              bool
 }
 
+// HeapStatistics represents V8 class - see http://v8.paulfryzel.com/docs/master/classv8_1_1_heap_statistics.html
+type HeapStatistics struct {
+	TotalHeapSize           int
+	TotalHeapSizeExecutable int
+	TotalPhysicalSize       int
+	TotalAvailableSize      int
+	UsedHeapSize            int
+	HeapSizeLimit           int
+	MallocedMemory          int
+	DoesZapGarbage          int
+}
+
 // Version return the V8 version E.G. "4.3.59"
 func Version() string {
 	return C.GoString(C.worker_version())
@@ -118,6 +130,22 @@ func (w *Worker) IdleNotificationDeadline(deadLineInSeconds float64) bool {
 // scriptName and the contents of the file specified by the param code.
 func (w *Worker) Load(scriptName string, code string) error {
 	return w.LoadWithOptions(&ScriptOrigin{ScriptName: scriptName}, code)
+}
+
+// GetHeapStatistics returns statistics about the V8 isolate heap memory usage
+func (w *Worker) GetHeapStatistics() *HeapStatistics {
+	hs := C.struct_heap_statistics_s{}
+	C.worker_get_heap_statistics(w.cWorker, &hs)
+	return &HeapStatistics{
+		TotalHeapSize:           int(hs.total_heap_size),
+		TotalHeapSizeExecutable: int(hs.total_heap_size_executable),
+		TotalPhysicalSize:       int(hs.total_physical_size),
+		TotalAvailableSize:      int(hs.total_available_size),
+		UsedHeapSize:            int(hs.used_heap_size),
+		HeapSizeLimit:           int(hs.heap_size_limit),
+		MallocedMemory:          int(hs.malloced_memory),
+		DoesZapGarbage:          int(hs.does_zap_garbage),
+	}
 }
 
 // LoadWithOptions loads and executes a javascript file with the ScriptOrigin specified by

@@ -96,7 +96,9 @@ std::string ExceptionString(Isolate* isolate, TryCatch* try_catch) {
 
 
 extern "C" {
-#include "_cgo_export.h"
+
+extern void recvCb(char*, int);
+extern char* recvSyncCb(char*, int);
 
 const char* worker_version() {
   return V8::GetVersion();
@@ -374,7 +376,21 @@ void worker_dispose(worker* w) {
 }
 
 void worker_terminate_execution(worker* w) {
-  V8::TerminateExecution(w->isolate);
+  w->isolate->TerminateExecution();
+}
+
+void worker_get_heap_statistics(worker* w, heap_statistics* hs) {
+  HeapStatistics heap_statistics;
+  w->isolate->GetHeapStatistics(&heap_statistics);
+
+  hs->total_heap_size = heap_statistics.total_heap_size();
+  hs->total_heap_size_executable = heap_statistics.total_heap_size_executable();
+  hs->total_physical_size = heap_statistics.total_physical_size();
+  hs->total_available_size = heap_statistics.total_available_size();
+  hs->used_heap_size = heap_statistics.used_heap_size();
+  hs->heap_size_limit = heap_statistics.heap_size_limit();
+  //hs->malloced_memory = heap_statistics.malloced_memory();
+  hs->does_zap_garbage = heap_statistics.does_zap_garbage();
 }
 
 }
