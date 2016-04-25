@@ -174,8 +174,8 @@ func (w *Worker) LoadWithOptions(origin *ScriptOrigin, code string) error {
 
 	r := C.worker_load(w.cWorker, cCode, cScriptName, cLineOffset, cColumnOffset, cIsSharedCrossOrigin, cScriptId, cIsEmbedderDebugScript, cSourceMapURL, cIsOpaque)
 	if r != 0 {
-		errStr := C.GoString(C.worker_last_exception(w.cWorker))
-		return errors.New(errStr)
+		errStr := C.worker_last_exception(w.cWorker)
+		return errors.New(C.GoString(errStr))
 	}
 	return nil
 }
@@ -194,8 +194,8 @@ func (w *Worker) Send(msg string) error {
 
 	r := C.worker_send(w.cWorker, msg_s)
 	if r != 0 {
-		errStr := C.GoString(C.worker_last_exception(w.cWorker))
-		return errors.New(errStr)
+		errStr := C.worker_last_exception(w.cWorker)
+		return errors.New(C.GoString(errStr))
 	}
 
 	return nil

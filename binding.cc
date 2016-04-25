@@ -150,6 +150,7 @@ int worker_load(worker* w, char* source_s, char* name_s, int line_offset_s, int 
 }
 
 void worker_low_memory_notification(worker* w) {
+  Locker locker(w->isolate);
   w->isolate->LowMemoryNotification();
 }
 
@@ -257,9 +258,10 @@ void SendSync(const FunctionCallbackInfo<Value>& args) {
     String::Utf8Value str(v);
     msg = ToCString(str);
   }
-  const char* returnMsg = recvSyncCb((char*)msg.c_str(), w->id);
+  char *returnMsg = recvSyncCb((char*)msg.c_str(), w->id);
   Local<String> returnV = String::NewFromUtf8(w->isolate, returnMsg);
   args.GetReturnValue().Set(returnV);
+  free(returnMsg);
 }
 
 // Called from golang. Must route message to javascript lang.
